@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>내면 다이어리 · 하루 감정 체크</title>
+<style>
+  body{margin:0;font-family:system-ui,Pretendard,Apple SD Gothic Neo,sans-serif;background:#f6f7fb;color:#222;}
+  header{background:#4f46e5;color:#fff;padding:18px 20px;text-align:center;font-weight:600;}
+  main{max-width:720px;margin:auto;padding:18px;}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;margin-bottom:14px;}
+  label{display:block;font-weight:600;margin-bottom:8px;}
+  select,input[type=text],textarea{width:100%;border:1px solid #e5e7eb;border-radius:12px;padding:10px;font-size:16px;}
+  textarea{min-height:80px;}
+  .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .pill{flex:1 1 calc(33% - 8px);text-align:center;padding:8px;border-radius:12px;border:1px solid #e5e7eb;cursor:pointer;user-select:none;}
+  .pill.active{background:#4f46e5;color:#fff;border-color:#4f46e5;}
+  button{border:none;border-radius:12px;padding:12px 16px;font-size:16px;cursor:pointer;}
+  .primary{background:#4f46e5;color:#fff;width:100%;margin-top:12px;}
+  .hint{font-size:12px;color:#666;margin-top:4px;}
+</style>
+</head>
+<body>
+<header>🌿 내면 다이어리 · 오늘의 마음 기록</header>
+<main>
+  <div class="card">
+    <label>1. 오늘의 마음 날씨</label>
+    <div class="row" id="weatherBox"></div>
+  </div>
+
+  <div class="card">
+    <label>2. 감정 상태</label>
+    <div class="row" id="emotionBox"></div>
+    <input type="text" id="emotionExtra" placeholder="다른 감정이 있다면 적어보세요" />
+  </div>
+
+  <div class="card">
+    <label>3. 에너지 상태</label>
+    <div class="row" id="energyBox"></div>
+  </div>
+
+  <div class="card">
+    <label>4. 오늘 하루를 한 문장으로 요약한다면?</label>
+    <input type="text" id="summary" placeholder="예: 오늘은 조금 지쳤지만 잘 버텼어." />
+  </div>
+
+  <div class="card">
+    <label>5. 오늘의 마음을 더 이야기해볼까요?</label>
+    <textarea id="detail" placeholder="예: 왜 그렇게 느꼈는지, 어떤 순간이 떠오르는지 적어보세요."></textarea>
+  </div>
+
+  <div class="card">
+    <label>6. 오늘 고마운 순간 1가지</label>
+    <textarea id="gratitude" placeholder="예: 가족과 함께 저녁을 먹은 순간"></textarea>
+  </div>
+
+  <div class="card">
+    <label>7. 내일을 위한 다짐</label>
+    <select id="pledgeSelect">
+      <option value="">선택해주세요</option>
+      <option>충분히 쉬기</option>
+      <option>가벼운 운동하기</option>
+      <option>마음의 대화 시도하기</option>
+      <option>감정 일기 쓰기</option>
+      <option>나 자신에게 칭찬 한마디</option>
+    </select>
+    <input type="text" id="pledgeExtra" placeholder="직접 적기 (선택 외)" />
+  </div>
+
+  <button class="primary" id="saveBtn">오늘의 기록 저장하기</button>
+  <div class="hint">데이터는 이 브라우저에만 저장됩니다(localStorage).</div>
+</main>
+
+<script>
+const options = {
+  weather:['☀️ 맑음','☁️ 흐림','🌧 비','🌈 무지개 느낌','⛈ 답답함','🌙 차분함'],
+  emotion:['😊 기쁨','😌 평온','😢 슬픔','😡 화남','😔 외로움','😰 불안','😴 피곤함','🤗 감사함'],
+  energy:['💤 지침','🙂 보통','⚡ 활기참']
+};
+const makePills=(arr,boxId)=>arr.forEach(v=>{
+  const el=document.createElement('div');
+  el.textContent=v;el.className='pill';
+  el.onclick=()=>{document.querySelectorAll(`#${boxId} .pill`).forEach(p=>p.classList.remove('active'));el.classList.add('active');};
+  document.getElementById(boxId).appendChild(el);
+});
+makePills(options.weather,'weatherBox');
+makePills(options.emotion,'emotionBox');
+makePills(options.energy,'energyBox');
+
+const $=id=>document.getElementById(id);
+function getSelected(boxId){
+  const el=document.querySelector(`#${boxId} .pill.active`);
+  return el?el.textContent:'';
+}
+const KEY='innerDiary.v2';
+$('#saveBtn').onclick=()=>{
+  const data={
+    date:new Date().toISOString().slice(0,10),
+    weather:getSelected('weatherBox'),
+    emotion:getSelected('emotionBox'),
+    energy:getSelected('energyBox'),
+    emotionExtra:$('#emotionExtra').value.trim(),
+    summary:$('#summary').value.trim(),
+    detail:$('#detail').value.trim(),
+    gratitude:$('#gratitude').value.trim(),
+    pledge:($('#pledgeSelect').value||'')+' '+$('#pledgeExtra').value.trim()
+  };
+  const all=JSON.parse(localStorage.getItem(KEY)||'[]');
+  all.push(data); localStorage.setItem(KEY,JSON.stringify(all));
+  alert('오늘의 마음이 저장되었어요 🌱');
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  ['emotionExtra','summary','detail','gratitude','pledgeExtra'].forEach(i=>$(i).value='');
+  $('#pledgeSelect').value='';
+};
+</script>
+</body>
+</html>
